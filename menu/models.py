@@ -15,8 +15,8 @@ class Tag(Model):
     item_name = models.CharField(max_length=200)
 
 class Item(Model):
-    item_name = models.CharField(max_length=200)
-    item_price = models.DecimalField(max_digits=10, decimal_places=2)
+    item_name = models.CharField(max_length=200, db_index=True)
+    item_price = models.DecimalField(max_digits=10, decimal_places=2, db_index=True)
     item_desc = models.TextField()
     #item_image = models.ImageField(upload_to='menu_images/')
     item_image = models.URLField(max_length=200)
