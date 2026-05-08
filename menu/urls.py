@@ -26,4 +26,6 @@ urlpatterns = [
     #path('items/safedelete/<int:item_id>/', views.delete_item_with_confirm, name='delete_item_with_confirm'),
     path('items/safedelete/<int:pk>/', views.DeleteItemView.as_view(), name='delete_item_with_confirm'),
 
+    path('items/favorite/<int:pk>/', views.favorite_item, name='favorite_item'),
+
 ]
