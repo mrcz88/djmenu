@@ -1,0 +1,48 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu</title>
+    <link rel="stylesheet" href="{% static 'menu/style.css' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <nav style="padding: 10px; border-bottom: 1px solid #ddd; display: flex; align-items: center;">
+        <div>
+            <a href="{% url 'menu:index' %}">Home</a>
+            |
+            <a href="{% url 'menu:item_list' %}">Prodotti</a>
+            |
+            <a href="{% url 'menu:create_item' %}">Aggiungi</a>
+            |
+            {% if user.is_authenticated %}
+                <a href="{% url 'users:logout2' %}">Logout</a>
+            {% else %}
+                <a href="{% url 'users:login' %}">Login</a>
+                |
+                <a href="{% url 'users:register' %}">Registrati</a>
+            {% endif %}
+        </div>
+        <div style="margin-left: auto;">
+            {% if user.is_authenticated %}
+                <a href="{% url 'users:profile' %}">{{user.username}}</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="bg-green-500 text-green-700">
+                {{message}}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <main style="padding: 10px;">
+        {% block content %}
+        {% endblock %}
+    </main>
+</body>
+</html>

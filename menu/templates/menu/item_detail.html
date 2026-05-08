@@ -1,0 +1,15 @@
+{% extends 'menu/base.html' %}
+{% block content %}
+  <h2>{{ item.item_name }}</h2>
+
+  <p><strong>Prezzo:</strong> {{ item.item_price }}</p>
+
+  <p><strong>Descrizione:</strong></p>
+  <p>{{ item.item_desc }}</p>
+
+  {% if item.item_image %}
+    <p><strong>Immagine:</strong></p>
+    <p><a href="{{ item.item_image }}">{{ item.item_image }}</a></p>
+    <img src="{{ item.item_image }}" alt="{{ item.item_name }}" style="max-width: 320px; height: auto;">
+  {% endif %}
+{% endblock %}
