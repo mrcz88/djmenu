@@ -81,7 +81,7 @@ def delete_item(request, item_id):
     return redirect('menu:item_list')
 
 
-class DeleteItemView(DeleteView, UserPassesTestMixin):
+class DeleteItemView(UserPassesTestMixin, DeleteView):
     model = Item
     # di default DeleteView usa il template delete_form.html
     template_name = "menu/delete_item_with_confirm.html"
@@ -101,3 +101,7 @@ def delete_item_with_confirm(request, item_id):
         item.delete()
         return redirect('menu:item_list')
     return render(request, "menu/delete_item_with_confirm.html", {'item' : item})
+
+@login_required
+def favorite_item(request, pk):
+    pass
