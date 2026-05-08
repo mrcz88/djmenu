@@ -21,7 +21,7 @@
                     <div class="text-sm text-slate-500">
                         {{ item.creator.username }}    
                         {% if item.favorited_by.count > 0 %}
-                        | Favorited by #{{ item.favorited_by.count }}
+                        | Favorited by #{{ item.num_favorites|default:item.favorited_by.count }}
                         {% endif %}
                         <a href="{% url 'menu:favorite_item' item.id %}">
                            <img class="inline-block w-4 h-4 align-text-bottom" src="{% static 'menu/star.png' %}" alt="Favorite"/>

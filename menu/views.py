@@ -1,8 +1,11 @@
-from django.shortcuts import render, redirect
+from django.db.models import Avg, Count, Max, Sum
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.utils import timezone
+from datetime import timedelta
 from .models import Item
 from .forms import ItemForm
 
@@ -63,7 +66,14 @@ class UpdateItemView(UpdateView):
 
 # Create your views here.
 def item_list(request):
-    items = Item.objects.all()
+    # utilizziamo select_related per ottimizzare le query 
+    # e prefetch_related per ottimizzare le query dei tag 
+    # (In pratica eseguira un query per ottenere gli item e un query per ottenere i tag)
+    items = Item.objects.all()\
+        .select_related('creator')\
+        .prefetch_related('tags')\
+        .annotate(num_favorites=Count('favorited_by'))\
+        .order_by('-item_created_at')
     print(items)
     return render(request, 'menu/item_list.html', {'items': items})
 
@@ -76,7 +86,7 @@ class ItemListView(ListView):
 
 @login_required
 def delete_item(request, item_id):
-    item = Item.objects.get(id=item_id)
+    item = get_object_or_404(Item, id=item_id)
     item.delete()
     return redirect('menu:item_list')
 
@@ -96,7 +106,10 @@ class DeleteItemView(UserPassesTestMixin, DeleteView):
 
 @login_required
 def delete_item_with_confirm(request, item_id):
-    item = Item.objects.get(id=item_id)
+    try: 
+        item = Item.objects.get(id=item_id)
+    except Item.DoesNotExist:
+        return redirect('menu:item_list')
     if request.method == "POST":
         item.delete()
         return redirect('menu:item_list')
@@ -105,3 +118,43 @@ def delete_item_with_confirm(request, item_id):
 @login_required
 def favorite_item(request, pk):
     pass
+
+def cheaper_than_kebab(request):
+    items = Item.objects.filter(item_price__lt=10).order_by('-item_price')
+    return render(request, 'menu/cheaper_than_kebab.html', {'items': items})
+
+def user_has_created_item(request):
+    is_creator = Item.objects.filter(creator=request.user).order_by('-item_created_at').exists()
+    return render(request, 'menu/user_has_created_item.html', {'is_creator': is_creator})
+    
+def spicy_items(request):
+    items = Item.objects\
+        .filter(item_desc__icontains='piccante')\
+        .values("id", "item_name", "item_price")\
+        .order_by('-item_price')
+    return render(request, 'menu/spicy_items.html', {'items': items})
+
+def item_in_range(request, min_price, max_price):
+    items = Item.objects.filter(item_price__range=(min_price, max_price)).order_by('-item_price')
+    return render(request, 'menu/item_in_range.html', {'items': items})
+
+def item_by_first_letter(request, letter):
+    items = Item.objects.filter(item_name__startswith=letter).order_by('-item_price')
+    return render(request, 'menu/item_by_first_letter.html', {'items': items})
+
+def items_created_in_the_last_week(request):
+    start = (timezone.now() - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)
+    items = Item.objects.filter(item_created_at__gte=start).order_by('-item_price')
+    return render(request, 'menu/items_created_in_the_last_week.html', {'items': items})
+
+def average_price(request):
+    average = Item.objects.aggregate(Avg('item_price'))['item_price__avg']
+    return render(request, 'menu/average_price.html', {'average': average})
+
+def total_price(request):
+    total = Item.objects.aggregate(Sum('item_price'))['item_price__sum']
+    return render(request, 'menu/total_price.html', {'total': total})
+
+def max_price(request):
+    max = Item.objects.aggregate(Max('item_price'))['item_price__max']
+    return render(request, 'menu/max_price.html', {'max': max})
