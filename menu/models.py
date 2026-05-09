@@ -19,7 +19,7 @@ class Item(Model):
     item_price = models.DecimalField(max_digits=10, decimal_places=2, db_index=True)
     item_desc = models.TextField()
     #item_image = models.ImageField(upload_to='menu_images/')
-    item_image = models.URLField(max_length=200)
+    item_image = models.URLField(max_length=200, blank=True, null=True)
     item_created_at = models.DateTimeField(auto_now_add=True)
     item_updated_at = models.DateTimeField(auto_now=True)
     # One creator per item; many items per user
