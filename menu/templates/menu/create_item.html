@@ -1,9 +1,31 @@
 {% extends 'menu/base.html' %}
 {% block content %}
-<h1>Create Item</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create</button>
-</form>
+<div class="max-w-xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-slate-900">Create item</h1>
+        <p class="mt-1 text-sm text-slate-600">Add a new product to the menu.</p>
+    </div>
+
+    <div class="rounded-lg border bg-white p-6 shadow-sm">
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+
+            <div class="space-y-4">
+                {{ form.as_p }}
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+                <a class="rounded border px-4 py-2 text-sm hover:bg-gray-50" href="{% url 'menu:item_list' %}">
+                    Cancel
+                </a>
+                <button
+                    type="submit"
+                    class="rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                >
+                    Create
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
