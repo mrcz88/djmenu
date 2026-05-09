@@ -4,12 +4,20 @@ from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.core.paginator import Paginator
 from django.utils import timezone
 from datetime import timedelta
+from django.views.decorators.cache import cache_page
+import logging
 from .models import Item
 from .forms import ItemForm
 
+logger = logging.getLogger(__name__)
+
 def item_detail(request, item_id):
+    logger.info("item_detail")
+    logger.info(request.GET)
+    logger.info("Fetching item from database")
     item = Item.objects.get(id=item_id)
     return render(request, 'menu/item_detail.html', {'item': item})
 
@@ -69,13 +77,34 @@ def item_list(request):
     # utilizziamo select_related per ottimizzare le query 
     # e prefetch_related per ottimizzare le query dei tag 
     # (In pratica eseguira un query per ottenere gli item e un query per ottenere i tag)
+    #
     items = Item.objects.all()\
         .select_related('creator')\
         .prefetch_related('tags')\
         .annotate(num_favorites=Count('favorited_by'))\
         .order_by('-item_created_at')
-    print(items)
     return render(request, 'menu/item_list.html', {'items': items})
+
+
+@cache_page(60) # cache di 1 minuto
+def item_list_paginated(request):
+    # Item è un QuerySet, quindi possiamo usarlo con Paginator
+    # Un QuerySet è un oggetto che contiene i risultati di una query ma non esegue la query
+    # L'applicazione del Paginator equivale a fare un LIMIT nella query SQL
+    # e un OFFSET nella query SQL
+    logger.info("item_list_paginated")
+    logger.info(request.GET)
+    logger.info("Fetching items from database")
+    items = Item.objects.all()\
+        .select_related('creator')\
+        .prefetch_related('tags')\
+        .annotate(num_favorites=Count('favorited_by'))\
+        .order_by('-item_created_at')
+    logger.debug(f"Found {items.count()} items")
+    paginator = Paginator(items, 3)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'menu/item_list_paginated.html', {'page_obj': page_obj})
 
 # Classe per la lista dei prodotti
 # equivalente alla funzione item_list
@@ -109,6 +138,7 @@ def delete_item_with_confirm(request, item_id):
     try: 
         item = Item.objects.get(id=item_id)
     except Item.DoesNotExist:
+        logger.error(f"Item with id {item_id} does not exist")
         return redirect('menu:item_list')
     if request.method == "POST":
         item.delete()

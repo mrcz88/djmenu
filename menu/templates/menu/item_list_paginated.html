@@ -1,0 +1,78 @@
+{% extends 'menu/base.html' %}
+{% load static %}
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-semibold mb-4">Prodotti (paginated)</h1>
+
+    <ul class="space-y-3">
+        {% for item in page_obj %}
+        <li class="flex items-center gap-3 p-3 border rounded">
+            <img
+                src="{{ item.item_image }}"
+                alt="{{ item.item_name }}"
+                class="w-32 h-32 object-cover rounded bg-gray-100"
+            >
+
+            <div class="flex-1">
+                <div class="space-y-1">
+                    <a class="font-medium text-slate-900 hover:underline" href="{% url 'menu:item_detail' item.id %}">
+                        {{ item.item_name }}
+                    </a>
+                    <div class="text-sm text-slate-500">
+                        {{ item.creator.username }}    
+                        {% if item.favorited_by.count > 0 %}
+                        | Favorited by #{{ item.num_favorites|default:item.favorited_by.count }}
+                        {% endif %}
+                        <a href="{% url 'menu:favorite_item' item.id %}">
+                           <img class="inline-block w-4 h-4 align-text-bottom" src="{% static 'menu/star.png' %}" alt="Favorite"/>
+                        </a> 
+                    </div>
+                </div>
+            </div>
+
+            <a
+                class="text-sm px-2 py-1 border rounded hover:bg-gray-50"
+                href="{% url 'menu:update_item' item.id %}"
+            >
+                edit
+            </a>
+            <a
+                class="text-sm px-2 py-1 border rounded hover:bg-gray-50"
+                href="{% url 'menu:delete_item_with_confirm' item.id %}"
+            >
+                delete
+            </a>
+        </li>
+        {% endfor %}
+
+        <div class="mt-4 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                {% if page_obj.has_previous %}
+                    <a class="inline-flex items-center rounded border px-3 py-1.5 text-sm hover:bg-gray-50" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                {% else %}
+                    <span class="inline-flex items-center rounded border px-3 py-1.5 text-sm text-slate-400">Previous</span>
+                {% endif %}
+            </div>
+
+            <div class="text-sm text-slate-600">
+                Page <span class="font-medium text-slate-900">{{ page_obj.number }}</span>
+                of <span class="font-medium text-slate-900">{{ page_obj.paginator.num_pages }}</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                {% if page_obj.has_next %}
+                    <a class="inline-flex items-center rounded border px-3 py-1.5 text-sm hover:bg-gray-50" href="?page={{ page_obj.next_page_number }}">Next</a>
+                {% else %}
+                    <span class="inline-flex items-center rounded border px-3 py-1.5 text-sm text-slate-400">Next</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mt-2 text-sm text-slate-600">
+            {% for i in page_obj.paginator.page_range|slice:":10" %}
+                <a class="hover:underline" href="?page={{ i }}">{{ i }}</a>{% if not forloop.last %}<span class="text-slate-400">, </span>{% endif %}
+            {% endfor %}
+        </div>
+    </ul>
+</div>
+{% endblock %}

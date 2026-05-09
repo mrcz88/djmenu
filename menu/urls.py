@@ -5,8 +5,11 @@ from . import views
 app_name = "menu"
 
 urlpatterns = [
-    path('', views.ItemListView.as_view(), name='index'),
-    path('items/', views.ItemListView.as_view(), name='item_list'),
+    #path('', views.ItemListView.as_view(), name='index'),
+
+    path('', views.item_list_paginated, name='index'),
+    path('items/', views.item_list_paginated, name='item_list'),
+    #path('items/', views.ItemListView.as_view(), name='item_list'),
     # equivalente:
     # path('items/', views.item_list, name='item_list'),
 
