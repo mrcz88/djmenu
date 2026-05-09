@@ -40,7 +40,10 @@ def create_item(request):
         if form.is_valid():
             form.instance.creator = request.user
             form.save(commit=True)
-            return redirect('menu:item_detail', item_id=form.instance.id)
+            return redirect('menu:item_detail', pk=form.instance.id)
+        else:
+            logger.error(form.errors)
+            return render(request, 'menu/create_item.html', {'form': form})
 
 class CreateItemView(CreateView):
     model = Item
