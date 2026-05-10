@@ -1,4 +1,6 @@
+from django.contrib.auth.models import User
 from django.db.models import Avg, Count, Max, Sum
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
@@ -9,6 +11,16 @@ from django.utils import timezone
 from datetime import timedelta
 from django.views.decorators.cache import cache_page
 import logging
+
+from rest_framework import viewsets
+from rest_framework.views import APIView, status
+
+from menu.serializers import ItemSerializer
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from rest_framework import permissions
+from rest_framework import generics
+
 from .models import Item
 from .forms import ItemForm
 
@@ -151,6 +163,105 @@ def delete_item_with_confirm(request, item_id):
 @login_required
 def favorite_item(request, pk):
     pass
+
+# NON DRF
+def item_list_json(request):
+    items = Item.objects.all().values('id', 'item_name', 'item_price')
+    return JsonResponse(list(items), safe=False)
+
+# LIST AND CREATE API = = = =  = = = = = = = = = = = = = 
+
+class ItemViewSet(viewsets.ModelViewSet):
+    queryset = Item.objects.all()
+    serializer_class = ItemSerializer
+    # Altre permissions sono: IsAuthenticated, AllowAny, IsAdminUser, DjangoModelPermissions, DjangoModelPermissionsOrAnonReadOnly
+    # IsAuthenticatedOrReadOnly permette di leggere i dati senza autenticarsi
+    # IsAuthenticated permette di leggere e scrivere i dati solo se si è autenticati
+    # AllowAny permette di leggere e scrivere i dati senza autenticarsi
+    # IsAdminUser permette di leggere e scrivere i dati solo se si è admin
+    # DjangoModelPermissions permette di leggere e scrivere i dati solo se si ha i permessi di Django
+    # DjangoModelPermissionsOrAnonReadOnly permette di leggere i dati senza autenticarsi e scrivere i dati solo se si ha i permessi di Django
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(creator=self.request.user)
+
+class ItemListCreateAPIView(generics.ListCreateAPIView):
+    queryset = Item.objects.all()
+    serializer_class = ItemSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(creator=self.request.user)
+class ItemListAPIView(APIView):
+    def post(self, request):
+        serializer = ItemSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(creator=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get(self, request):
+        items = Item.objects.all()
+        serializer = ItemSerializer(items, many=True)
+        return Response(serializer.data)
+
+@api_view(['GET', 'POST'])
+def item_list_api(request):
+    if request.method == 'GET':
+        items = Item.objects.all()
+        serializer = ItemSerializer(items, many=True)
+        return Response(serializer.data)
+    elif request.method == 'POST':
+        # Nota la mancanza di many=True perché stiamo creando un singolo item
+        serializer = ItemSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(creator=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# DETAIL AND UPDATE AND DELETE API = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+
+class ItemRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Item.objects.all()
+    serializer_class = ItemSerializer
+
+class ItemDetailAPIView(APIView):
+    def get(self, request, pk):
+        item = Item.objects.get(id=pk)
+        serializer = ItemSerializer(item)
+        return Response(serializer.data)
+    def put(self, request, pk):
+        item = Item.objects.get(id=pk)
+        serializer = ItemSerializer(item, data=request.data)
+        if serializer.is_valid():
+            serializer.instance.creator = request.user
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, pk):
+        item = Item.objects.get(id=pk)
+        item.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def item_detail_api(request, pk):
+    if request.method == 'GET':
+        item = Item.objects.get(id=pk)
+        serializer = ItemSerializer(item)
+        return Response(serializer.data)
+    elif request.method == 'PUT':
+        item = Item.objects.get(id=pk)
+        serializer = ItemSerializer(item, data=request.data)
+        if serializer.is_valid():
+            serializer.instance.creator = request.user
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'DELETE':
+        item = Item.objects.get(id=pk)
+        item.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 def cheaper_than_kebab(request):
     items = Item.objects.filter(item_price__lt=10).order_by('-item_price')

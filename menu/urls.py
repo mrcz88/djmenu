@@ -1,6 +1,10 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
 from . import views
+
+router = DefaultRouter()
+router.register(r'items', views.ItemViewSet, basename='item')
 
 app_name = "menu"
 
@@ -8,7 +12,7 @@ urlpatterns = [
     #path('', views.ItemListView.as_view(), name='index'),
 
     path('', views.item_list_paginated, name='index'),
-    path('items/', views.item_list_paginated, name='item_list'),
+    path('items/', views.item_list_paginated, name='item_list'),    
     #path('items/', views.ItemListView.as_view(), name='item_list'),
     # equivalente:
     # path('items/', views.item_list, name='item_list'),
@@ -30,4 +34,13 @@ urlpatterns = [
 
     path('items/favorite/<int:pk>/', views.favorite_item, name='favorite_item'),
 
+    # API
+
+    path('items-json/', views.item_list_json, name='item_list_json'),
+
+    #path('api/items/', views.ItemListCreateAPIView.as_view(), name='item_list_api'),
+    #path('api/items/<int:pk>/', views.ItemRetrieveUpdateDestroyAPIView.as_view(), name='item_detail_api'),
+
+    # utilizzo router per gestire le API
+    path('api/', include(router.urls)),
 ]
