@@ -166,7 +166,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         # Aggiungo TokenAuthentication per l'API
         'rest_framework.authentication.TokenAuthentication',
-
+        # Aggiungo JWTAuthentication per l'API
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         #'rest_framework.permissions.IsAuthenticated',
