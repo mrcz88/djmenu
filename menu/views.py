@@ -20,9 +20,12 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import permissions
 from rest_framework import generics
+from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import Item
 from .forms import ItemForm
+from .permissions import IsCreatorOrReadOnly
 
 logger = logging.getLogger(__name__)
 
@@ -181,7 +184,10 @@ class ItemViewSet(viewsets.ModelViewSet):
     # IsAdminUser permette di leggere e scrivere i dati solo se si è admin
     # DjangoModelPermissions permette di leggere e scrivere i dati solo se si ha i permessi di Django
     # DjangoModelPermissionsOrAnonReadOnly permette di leggere i dati senza autenticarsi e scrivere i dati solo se si ha i permessi di Django
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsCreatorOrReadOnly]
+    # Di default prende tutte le authentication classes definite in settings.py
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
