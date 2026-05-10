@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework.authtoken',
     'rest_framework',
     'users.apps.UsersConfig',
     'menu',
@@ -163,6 +164,9 @@ LOGGING = {
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
+        # Aggiungo TokenAuthentication per l'API
+        'rest_framework.authentication.TokenAuthentication',
+
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         #'rest_framework.permissions.IsAuthenticated',
