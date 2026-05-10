@@ -1,5 +1,6 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from . import views
 
@@ -40,6 +41,10 @@ urlpatterns = [
 
     #path('api/items/', views.ItemListCreateAPIView.as_view(), name='item_list_api'),
     #path('api/items/<int:pk>/', views.ItemRetrieveUpdateDestroyAPIView.as_view(), name='item_detail_api'),
+
+    # NECESSARI solo per JWT Authentication. Guarda settings.py per la configurazione.
+    path("api/token/", TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name='token_refresh'),
 
     # utilizzo router per gestire le API
     path('api/', include(router.urls)),
