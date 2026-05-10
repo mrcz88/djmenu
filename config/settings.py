@@ -162,6 +162,27 @@ LOGGING = {
 }
 
 REST_FRAMEWORK = {
+
+    # Global Pagination
+    # DEFAULT_PAGINATION_CLASS e PAGE_SIZE non “avvolgono” tutte le risposte DRF. 
+    # Si usano quando la view passa dal meccanismo di paginazione di 
+    # DRF (tipicamente GenericAPIView.paginate_queryset + get_paginated_response), 
+    # come in:
+    # ListAPIView, ListCreateAPIView, ecc.
+    # ViewSet / ModelViewSet nell’azione list
+     #'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+
+    'PAGE_SIZE': 3,
+
+    'DEFAULT_FILTER_BACKENDS': [
+        #'rest_framework.filters.SearchFilter',
+        #'rest_framework.filters.OrderingFilter',
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ],
+    #'SEARCH_PARAM': 'search',
+    #'ORDERING_PARAM': 'ordering',
+
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
         # Aggiungo TokenAuthentication per l'API
