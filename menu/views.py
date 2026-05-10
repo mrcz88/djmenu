@@ -14,7 +14,7 @@ import logging
 
 from rest_framework import viewsets
 from rest_framework.views import APIView, status
-
+from rest_framework.filters import OrderingFilter, SearchFilter
 from menu.serializers import ItemSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -22,9 +22,11 @@ from rest_framework import permissions
 from rest_framework import generics
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Item
 from .forms import ItemForm
+from .filters import ItemFilter
 from .permissions import IsCreatorOrReadOnly
 
 logger = logging.getLogger(__name__)
@@ -188,6 +190,21 @@ class ItemViewSet(viewsets.ModelViewSet):
     # Di default prende tutte le authentication classes definite in settings.py
     authentication_classes = [TokenAuthentication, JWTAuthentication]
 
+    # definisco il backend di filtro e i campi su cui filtrare. Trovi altri backend in settings.py
+    filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
+    
+    # Usato da DjangoFilterBackend (range prezzo: ?min_price=&max_price=)
+    filterset_class = ItemFilter
+
+    # Usato da DjangoFilterBackend (prezzo: ?item_price=)
+    # Alternativa a filterset_class
+    # filterset_fields = ['item_price']
+
+    # Usato da OrderingFilter
+    ordering_fields = ['item_created_at', 'item_price']
+    
+    # Usato da SearchFilter
+    search_fields = ['item_name', 'item_desc']
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
